@@ -1,13 +1,15 @@
 var sha256 = require("js-sha256");
-
+var secp256k1 = require("secp256k1");
 class Transaction {
   //utxo -->
   constructor(input, prevOutput, signature) {
+    //might need to pass an amount
     this.id = ""; //hash of body
     this.prevOutput = prevOutput;
-    this.input = input; //signed previous output
-    this.output = { publicKey: "", amount: 100 };
+    this.input = this.signPreviousOutput(); //signed previous output
+    this.output = this.generateOutput();
     this.signature = signature;
+    this.privKet;
   }
 
   hashTransactionBody = () => {
@@ -17,8 +19,26 @@ class Transaction {
     //return sha256.hmac({...this.outputs, this.input}, this.signature)
   };
 
-  //the input is the previous output
+  signPreviousOutput = () => {
+    //out input
+    let privKey;
+    do {
+      this.privKet = randomBytes(32);
+    } while (!secp256k1.privateKeyVerify(this.privKey));
+    {
+      const signedPrevOutput = secp256k1.ecdsaSign(
+        this.prevOutput,
+        this.privKey
+      );
+    }
+  };
+
+  generateOutput = () => {
+    const pubKey = secp256k1.publicKeyCreate(this.privKey);
+    return [pubKey, amount];
+  };
 }
+
 class Block {
   constructor(prevHash, transactionList) {
     this.prevHash = prevHash;
